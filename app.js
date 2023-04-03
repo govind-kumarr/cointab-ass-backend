@@ -9,6 +9,8 @@ const app = express();
 
 app.use(express.json());
 
+app.use("/", "App is running at", port);
+
 app.use("/user", UserRouter);
 
 const startApp = () =>

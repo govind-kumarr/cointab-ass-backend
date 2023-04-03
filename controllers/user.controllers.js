@@ -25,10 +25,20 @@ export const makeLogin = async (req, res) => {
     const doesExist = await UserModel.exists({ email });
     if (doesExist == null) return res.send("No such user found");
     const user = await UserModel.findOne({ email });
-    console.log(user);
+    const id = user._id;
 
     //* Check if user is blocked
-    if (user.blocked.status) return res.send("Please try again after 24hours");
+    if (user.blocked.status) {
+      let from = new Date(user.blocked.from);
+      let to = new Date(user.blocked.to);
+      from = from.getTime();
+      to = to.getTime();
+
+      let diff = to - from;
+      let hours = 60 * 60 * 1000;
+      let duration = Math.round(diff / hours);
+      return res.send(`Please try again after ${duration}hours`);
+    }
 
     //* Check if password matches or not
     if (password === user.password) {
@@ -44,12 +54,19 @@ export const makeLogin = async (req, res) => {
         token,
       });
     } else {
-      let from = new Date();
-      let to = add1Day(from);
-      console.log(from, "\n", to);
-      res.send("Login failed");
       if (user.failedAttempts === 5) {
-      }
+        let from = new Date();
+        let to = new Date();
+        to.setDate(to.getDate() + 1);
+        user.blocked.status = true;
+        user.blocked.from = from;
+        user.blocked.to = to;
+      } else user.failedAttempts++;
+      res.send("Wrong Password!");
     }
-  } catch (error) {}
+    await UserModel.findByIdAndUpdate(id, user);
+  } catch (error) {
+    console.log("Error Logging in\n", error);
+    res.send("Something went wrong!");
+  }
 };
