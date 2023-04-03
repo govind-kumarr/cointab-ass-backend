@@ -8,11 +8,21 @@ export const makeSignup = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.send("Please enter full credentials");
   try {
+    const user = await UserModel.exists({ email });
+
+    if (user != null)
+      return res.send({
+        message: "User already exists Please Login",
+        email,
+        success: true,
+      });
+
     await UserModel.insertMany([{ email, password }]);
-    res.send("Signed Up Successfully!");
+
+    res.send({ message: "Signed Up Successfully!", success: true });
   } catch (error) {
     console.log("Error while signing up: \n", error);
-    res.send("Something went wrong");
+    res.send({ message: "Something went wrong", success: false });
   }
 };
 
@@ -37,7 +47,10 @@ export const makeLogin = async (req, res) => {
       let diff = to - from;
       let hours = 60 * 60 * 1000;
       let duration = Math.round(diff / hours);
-      return res.send(`Please try again after ${duration}hours`);
+      return res.send({
+        message: `Please try again after ${duration}hours`,
+        success: false,
+      });
     }
 
     //* Check if password matches or not
@@ -52,6 +65,7 @@ export const makeLogin = async (req, res) => {
       res.send({
         message: "Login successful",
         token,
+        success: true,
       });
     } else {
       if (user.failedAttempts === 5) {
@@ -62,11 +76,11 @@ export const makeLogin = async (req, res) => {
         user.blocked.from = from;
         user.blocked.to = to;
       } else user.failedAttempts++;
-      res.send("Wrong Password!");
+      res.send({ message: "Wrong Password!", success: false });
     }
     await UserModel.findByIdAndUpdate(id, user);
   } catch (error) {
     console.log("Error Logging in\n", error);
-    res.send("Something went wrong!");
+    res.send({ message: "Something went wrong!", success: false });
   }
 };

@@ -13,10 +13,9 @@ function App() {
 }
 
 //for development purposes
-export const baseUrl = "http://localhost:8080/";
-
-//for production purposes
 // export const baseUrl = "http://localhost:8080/";
 
+//for production purposes
+export const baseUrl = "https://cloudy-tan-slip.cyclic.app/";
 
 export default App;
