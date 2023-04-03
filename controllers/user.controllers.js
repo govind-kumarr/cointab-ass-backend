@@ -5,7 +5,8 @@ export const getUsers = async (req, res) => res.send(await UserModel.find());
 
 export const makeSignup = async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.send("Please enter full credentials");
+  if (!email || !password)
+    return res.send({ message: "Please enter full credentials" });
   try {
     const user = await UserModel.exists({ email });
 
@@ -27,12 +28,13 @@ export const makeSignup = async (req, res) => {
 
 export const makeLogin = async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.send("Please enter full credentials");
+  if (!email || !password)
+    return res.send({ message: "Please enter full credentials" });
 
   try {
     //* Does user exist
     const doesExist = await UserModel.exists({ email });
-    if (doesExist == null) return res.send("No such user found");
+    if (doesExist == null) return res.send({ message: "No such user found" });
     const user = await UserModel.findOne({ email });
     const id = user._id;
 
@@ -74,8 +76,14 @@ export const makeLogin = async (req, res) => {
         user.blocked.status = true;
         user.blocked.from = from;
         user.blocked.to = to;
-      } else user.failedAttempts++;
-      res.send({ message: "Wrong Password!", success: false });
+        res.send({ message: "Wrong Password!", success: false });
+      } else {
+        user.failedAttempts++;
+        res.send({
+          message: `Wrong Password! ${5 - user.failedAttempts} attempts left`,
+          success: false,
+        });
+      }
     }
     await UserModel.findByIdAndUpdate(id, user);
   } catch (error) {
