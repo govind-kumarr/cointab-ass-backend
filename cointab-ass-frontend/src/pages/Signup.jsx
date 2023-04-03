@@ -2,6 +2,13 @@ import React from "react";
 import { Box, Button, Modal, TextField, Typography } from "@mui/material";
 
 export const Signup = () => {
+
+  const makeSignUp = async (data) => {
+    try{
+      const response = await fetch(`${}`)
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault();
     let form = e.target;

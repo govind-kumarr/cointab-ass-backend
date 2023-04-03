@@ -12,4 +12,11 @@ function App() {
   );
 }
 
+//for development purposes
+export const baseUrl = "http://localhost:8080/";
+
+//for production purposes
+// export const baseUrl = "http://localhost:8080/";
+
+
 export default App;
