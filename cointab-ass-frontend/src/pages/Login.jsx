@@ -2,9 +2,13 @@ import React from "react";
 import { Box, Button, Modal, TextField, Typography } from "@mui/material";
 import { baseUrl } from "../App";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { openModal } from "../../redux/feature";
 
 export const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const makeLogin = async (data) => {
     try {
       const response = await fetch(`${baseUrl}user/login`, {
@@ -14,6 +18,7 @@ export const Login = () => {
       });
       const responseData = await response.json();
       console.log(responseData);
+      dispatch(openModal(responseData.message));
       if (responseData.success)
         navigate("/home", { state: { email: data.email } });
     } catch (error) {
@@ -23,13 +28,16 @@ export const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    dispatch(openModal("Logging In"));
+
     let form = e.target;
     let data = new FormData(form);
     data = Object.fromEntries(data);
 
     console.log(data);
     makeLogin(data);
-    form.reset();
+    // form.reset();
   };
   return (
     <Box>
@@ -48,6 +56,14 @@ export const Login = () => {
         <TextField name="password" type="password" label="password" required />
         <Button variant="contained" type="submit">
           login
+        </Button>
+        <Button
+          variant="outlined"
+          type="button"
+          sx={{ marginTop: "10px" }}
+          onClick={() => navigate("/")}
+        >
+          signup
         </Button>
       </form>
     </Box>

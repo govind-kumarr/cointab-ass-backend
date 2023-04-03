@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import { UserModel } from "../model/User.Model.js";
-import { add1Day } from "../utils/functions.js";
 
 export const getUsers = async (req, res) => res.send(await UserModel.find());
 
