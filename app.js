@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use("/", (req, res) => res.send("App is running at", port));
+app.use("/", (req, res) => res.statusCode(200).send("App is running at", port));
 
 app.use("/user", UserRouter);
 
