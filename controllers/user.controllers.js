@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { UserModel } from "../model/User.Model.js";
+import { compareDates } from "../utils/functions.js";
 
 export const getUsers = async (req, res) => res.send(await UserModel.find());
 
@@ -28,6 +29,8 @@ export const makeSignup = async (req, res) => {
 
 export const makeLogin = async (req, res) => {
   const { email, password } = req.body;
+
+  //* if anything is missing then terminate the request
   if (!email || !password)
     return res.send({ message: "Please enter full credentials" });
 
@@ -39,19 +42,25 @@ export const makeLogin = async (req, res) => {
     const id = user._id;
 
     //* Check if user is blocked
-    if (user.blocked.status) {
-      let from = new Date(user.blocked.from);
-      let to = new Date(user.blocked.to);
-      from = from.getTime();
-      to = to.getTime();
+    let now = new Date();
+    let to = new Date(user.blocked.to);
+    now = now.getTime();
+    to = to.getTime();
 
-      let diff = to - from;
+    if (user.blocked.status && !compareDates(now, to)) {
+      //* blocked status is true and blocked duration is not over
+      let diff = to - now;
       let hours = 60 * 60 * 1000;
       let duration = Math.round(diff / hours);
       return res.send({
         message: `Please try again after ${duration}hours`,
         success: false,
       });
+    } else if (compareDates(now, to)) {
+      //* else if blocked duration is over then reset
+      user.blocked.status = false;
+      user.blocked.from = "";
+      user.blocked.to = "";
     }
 
     //* Check if password matches or not
@@ -69,6 +78,11 @@ export const makeLogin = async (req, res) => {
         success: true,
       });
     } else {
+      user.failedAttempts++;
+      res.send({
+        message: `Wrong Password! ${5 - user.failedAttempts} attempts left`,
+        success: false,
+      });
       if (user.failedAttempts === 5) {
         let from = new Date();
         let to = new Date();
@@ -76,13 +90,6 @@ export const makeLogin = async (req, res) => {
         user.blocked.status = true;
         user.blocked.from = from;
         user.blocked.to = to;
-        res.send({ message: "Wrong Password!", success: false });
-      } else {
-        user.failedAttempts++;
-        res.send({
-          message: `Wrong Password! ${5 - user.failedAttempts} attempts left`,
-          success: false,
-        });
       }
     }
     await UserModel.findByIdAndUpdate(id, user);
